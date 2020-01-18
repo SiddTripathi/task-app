@@ -1,6 +1,6 @@
 const request = require('supertest')
 
-const { userOneId, userOne, setupDatabase } = require('./fixtures/db')
+const { userOneId, userOne, userTwo, userTwoId, setupDatabase } = require('./fixtures/db')
 
 //requiring app file as we needed our express application without port start function. That is why we created a seperate file
 //without port containing all the other necessary imports and functions. We then deleted those imports from index.js .
@@ -84,7 +84,6 @@ test('Should delete account for user', async () => {
 
 test('Should not delete account for unauth user', async () => {
     await request(app).delete('/users/me')
-
         .send()
         .expect(401)
 })
@@ -109,10 +108,19 @@ test('Should update valid user fields', async () => {
         .expect(200)
     const user = await User.findById(userOneId)
     expect(user.name).toEqual('Ritu')
-
 })
 
-test('Should not update invalid user fields', async () => {
+test('Should not update unAuthorized user', async () => {
+    await request(app)
+        .patch('/users/me')
+        // .set('Authorization', `Bearer ${userTwo.tokens[0].token}`)
+        .send({
+            name: 'Ritu'
+        })
+        .expect(401)
+})
+
+test('Should not update invalid user fields', async (done) => {
     await request(app)
         .patch('/users/me')
         .set('Authorization', `Bearer ${userOne.tokens[0].token}`)
@@ -120,6 +128,5 @@ test('Should not update invalid user fields', async () => {
             location: 'Kanpur'
         })
         .expect(400)
-
-
+    done()
 })
